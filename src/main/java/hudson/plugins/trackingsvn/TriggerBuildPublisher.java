@@ -33,7 +33,8 @@ public class TriggerBuildPublisher extends Recorder {
 
 	@Override
 	public boolean perform(AbstractBuild<?, ?> build, Launcher launcher, BuildListener listener) throws InterruptedException, IOException {
-		if (build.getResult().isBetterOrEqualTo(Result.UNSTABLE)) {
+		Result r = build.getResult();
+		if (r != null && r.isBetterOrEqualTo(Result.UNSTABLE)) {
 			build.addAction(new TriggerBuildAction(build));
 		}
 
@@ -58,18 +59,6 @@ public class TriggerBuildPublisher extends Recorder {
 			if (url.equals(Util.fixEmptyAndTrim(s))) return true;
 		}
 		return false;
-	}
-
-	public List<AbstractProject> getAdditionalProjectsList() {
-		if (additionalProjects == null) return Collections.emptyList();
-
-		StringTokenizer st = new StringTokenizer(additionalProjects, ",", false);
-		List<AbstractProject> result = new ArrayList<AbstractProject>();
-		while (st.hasMoreElements()) {
-			AbstractProject proj = Hudson.getInstance().getItemByFullName(st.nextToken().trim(), AbstractProject.class);
-			if (proj != null) result.add(proj);
-		}
-		return result;
 	}
 
 	@Extension

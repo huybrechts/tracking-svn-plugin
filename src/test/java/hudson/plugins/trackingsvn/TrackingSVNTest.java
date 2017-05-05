@@ -93,7 +93,7 @@ public class TrackingSVNTest extends HudsonTestCase {
         boolean exists = newFile.exists();
         newFile.touch(System.currentTimeMillis());
         newFile.write("" + System.currentTimeMillis(), null);
-        SVNClientManager svnm = SubversionSCM.createSvnClientManager(); // <-- Pass forCommit as param
+        SVNClientManager svnm = SubversionSCM.createSvnClientManager(forCommit); // <-- Pass forCommit as param
                                    // when dependency is updated to newer version of subversion plugin.
         if (!exists) svnm.getWCClient().doAdd(new File(newFile.getRemote()),false,false,false, SVNDepth.INFINITY, false,false);
         SVNCommitClient cc = svnm.getCommitClient();

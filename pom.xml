@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.jenkins-ci.plugins</groupId>
         <artifactId>plugin</artifactId>
-        <version>1.466</version>
+        <version>2.23</version>
     </parent>
     <artifactId>tracking-svn</artifactId>
 	<version>1.2-SNAPSHOT</version>
@@ -16,9 +16,9 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>org.jvnet.hudson.plugins</groupId>
+			<groupId>${project.groupId}</groupId>
 			<artifactId>subversion</artifactId>
-			<version>1.17</version>
+			<version>2.6</version>
 		</dependency>
 	</dependencies>
 

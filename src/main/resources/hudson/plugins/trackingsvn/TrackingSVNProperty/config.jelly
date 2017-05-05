@@ -1,8 +1,6 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-	<f:optionalBlock name="track-svn"
-		title="${%Track SVN source of another project}" checked="${instance!=null}"
-		>
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+	<f:optionalBlock name="track-svn" title="${%Track SVN source of another project}" checked="${instance!=null}">
 		<f:nested>
 			<f:entry title="Project to track" field="sourceProject">
 				<f:textbox/>

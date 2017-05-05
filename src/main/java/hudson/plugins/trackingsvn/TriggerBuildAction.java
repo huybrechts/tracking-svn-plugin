@@ -60,12 +60,12 @@ public class TriggerBuildAction implements Action {
 
 		TrackingSVNRevisionParameterAction action = new TrackingSVNRevisionParameterAction(revisions, build);
 
-		AbstractProject<?,?> p = Hudson.getInstance().getItemByFullName(project, AbstractProject.class);
+		AbstractProject<?,?> p = Hudson.getActiveInstance().getItem(project, build.getProject().getParent(), AbstractProject.class);
 		if (p == null) {
 			throw new TrackingSVNException("Project " + project + " unknown.");
 		}
 
-		p.scheduleBuild2(0, new Cause.UserCause(), action, new TrackingSVNAction(build));
+		p.scheduleBuild2(0, new Cause.UserIdCause(), action, new TrackingSVNAction(build));
 
 		triggeredProjects.add(project);
 
@@ -84,16 +84,29 @@ public class TriggerBuildAction implements Action {
 
 		TriggerBuildPublisher publisher = build.getProject().getPublishersList().get(TriggerBuildPublisher.class);
 
-		result.addAll(publisher.getAdditionalProjectsList());
+		ItemGroup<Item> parent = build.getProject().getParent();
 
-		if (publisher.isTriggerDownstreamProjects())
-		for (AbstractProject<?,?> project: Hudson.getInstance().getItems(AbstractProject.class)) {
-			TrackingSVNProperty prop = project.getProperty(TrackingSVNProperty.class);
-			if (prop == null) continue;
+		result.addAll(
+				Items.fromNameList(
+						parent,
+						publisher.getAdditionalProjects(),
+						AbstractProject.class
+				)
+		);
 
-			if (prop.getSourceProject().equals(build.getProject().getName())) {
-				result.add(project);
-			}
+		if (publisher.isTriggerDownstreamProjects()) {
+			for (Item item: parent.getItems()) {
+				if (item instanceof AbstractProject) {
+					AbstractProject<?,?> project = (AbstractProject) item;
+					TrackingSVNProperty prop = project.getProperty(TrackingSVNProperty.class);
+					if (prop != null) {
+						if (Hudson.getActiveInstance().getItem(prop.getSourceProject(), project) ==
+								build.getProject()) {
+							result.add(project);
+						}
+					}
+				}
+            }
 		}
 
 		return result;
@@ -101,8 +114,8 @@ public class TriggerBuildAction implements Action {
 	}
 
 	public void addTriggeredBuild(AbstractBuild build) {
-		triggeredBuilds.put(build.getProject().getName(), build.getNumber());
-		triggeredProjects.remove(build.getProject().getName());
+		triggeredBuilds.put(build.getProject().getFullName(), build.getNumber());
+		triggeredProjects.remove(build.getProject().getFullName());
 
 		try {
 			build.save();
@@ -129,6 +142,6 @@ public class TriggerBuildAction implements Action {
 	public AbstractBuild getTriggeredBuild(String project) {
 		Integer buildNumber = triggeredBuilds.get(project);
 		if (buildNumber == null) return null;
-		return (AbstractBuild) Hudson.getInstance().getItemByFullName(project, AbstractProject.class).getBuildByNumber(buildNumber);
+		return (AbstractBuild) Hudson.getActiveInstance().getItem(project, build.getParent(), AbstractProject.class).getBuildByNumber(buildNumber);
 	}
 }

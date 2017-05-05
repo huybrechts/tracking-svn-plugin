@@ -1,9 +1,10 @@
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define"
-	xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <table style="margin-top: 1em; margin-left:1em;">
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler"
+	 xmlns:t="/lib/hudson" > <table style="margin-top: 1em; margin-left:1em;">
 	<t:summary icon="star.gif">
-		Tracking SVN of <a href="${app.rootUrl}${app.getItem(it.parent.sourceProject).url}">${it.parent.sourceProject}</a> 
-		<st:nbsp/><a href="${app.rootUrl}${it.parent.trackedBuild.url}">${it.parent.trackedBuild.displayName}</a>
+		<j:set var="sourceProject" value="${app.getItem(it.parent.sourceProject, it.parent.owner)}"/>
+		Tracking SVN of <a href="${sourceProject.absoluteUrl}">${sourceProject.fullDisplayName}</a>
+		<st:nbsp/><a href="${it.parent.trackedBuild.absoluteUrl}">${it.parent.trackedBuild.displayName}</a>
 		 (${it.parent.toTrack.toString().toLowerCase()})
 	</t:summary>
 	</table>

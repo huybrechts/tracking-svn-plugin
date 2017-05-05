@@ -18,7 +18,7 @@ public class TrackingSVNAction extends InvisibleAction implements EnvironmentCon
 	private final int trackedBuildNumber;
 	
 	public TrackingSVNAction(Run<?,?> build) {
-		trackedBuildProject = build.getParent().getName();
+		trackedBuildProject = build.getParent().getFullName();
 		trackedBuildNumber = build.getNumber();
 	}
 	
@@ -27,8 +27,12 @@ public class TrackingSVNAction extends InvisibleAction implements EnvironmentCon
 	}
 	
 	public Run<?,?> getTrackedBuild() {
-		Job<?,?> job = (Job<?,?>) Hudson.getInstance().getItem(trackedBuildProject);
-		return job.getBuildByNumber(trackedBuildNumber);
+		Job<?,?> job = (Job<?,?>) Hudson.getActiveInstance().getItemByFullName(trackedBuildProject);
+		if (job == null) {
+			return null;
+		} else {
+			return job.getBuildByNumber(trackedBuildNumber);
+		}
 	}
 
 	@Exported(visibility=2)
@@ -45,7 +49,7 @@ public class TrackingSVNAction extends InvisibleAction implements EnvironmentCon
 	public String getTrackedBuildURL() {
 		Run<?,?> r = getTrackedBuild();
 		if (r == null) return null;
-		return Hudson.getInstance().getRootUrl() + r.getUrl();
+		return Hudson.getActiveInstance().getRootUrl() + r.getUrl();
 	}
 
 }

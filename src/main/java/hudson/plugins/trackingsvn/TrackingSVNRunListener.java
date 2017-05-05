@@ -58,7 +58,12 @@ public class TrackingSVNRunListener extends RunListener<AbstractBuild> {
                 throw new TrackingSVNException("Project " + property.getSourceProject()
                         + " is not an SVN project");
             }
-            trackedBuild = (AbstractBuild<?, ?>) tsvnAction.getTrackedBuild();
+            AbstractBuild b = (AbstractBuild<?, ?>) tsvnAction.getTrackedBuild();
+            if (b == null) {
+                throw new TrackingSVNException("no tracked build for " + trackedBuild);
+            } else {
+                trackedBuild = b;
+            }
             tagAction = trackedBuild.getAction(SubversionTagAction.class);
         }
 
@@ -96,7 +101,7 @@ public class TrackingSVNRunListener extends RunListener<AbstractBuild> {
             if (digest == null) {
                 digest = Util.toHexString(MessageDigest.getInstance("MD5").digest(trackedBuild.getExternalizableId().getBytes("UTF-8")));
             }
-            FingerprintMap map = Jenkins.getInstance().getFingerprintMap();
+            FingerprintMap map = Jenkins.getActiveInstance().getFingerprintMap();
             Fingerprint f = map.getOrCreate(trackedBuild, fileName, digest);
             f.add(trackedBuild);
             f.add(build);

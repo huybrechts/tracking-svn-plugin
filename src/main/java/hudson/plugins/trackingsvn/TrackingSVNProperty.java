@@ -82,14 +82,19 @@ public class TrackingSVNProperty extends JobProperty<AbstractProject<?, ?>> {
 		if (sourceProject == null) {
 			throw new NullPointerException("'project to track' is required");
 		}
-		
-		if (Hudson.getInstance().getItem(sourceProject) == null) {
-			throw new IllegalArgumentException("Project to track unknown: " + sourceProject);
-		}
+
+		// can't check for lack of context
+//		if (Hudson.getActiveInstance().getItemByFullName(sourceProject) == null) {
+//			throw new IllegalArgumentException("Project to track unknown: " + sourceProject);
+//		}
 	}
 
 	public String getSourceProject() {
 		return sourceProject;
+	}
+
+	public Item getOwner() {
+		return owner;
 	}
 
 	public ToTrack getToTrack() {
@@ -132,7 +137,7 @@ public class TrackingSVNProperty extends JobProperty<AbstractProject<?, ?>> {
 		 * Form validation method.
 		 */
 		public FormValidation doCheckSourceProject(
-				@AncestorInPath AccessControlled subject,
+				@AncestorInPath AbstractProject subject,
 				@QueryParameter String value) {
 			// Require CONFIGURE permission on this project
 			if (!subject.hasPermission(Item.CONFIGURE))
@@ -147,11 +152,15 @@ public class TrackingSVNProperty extends JobProperty<AbstractProject<?, ?>> {
 				return FormValidation.error("This field is required");
 			}
 
-			Item item = Hudson.getInstance().getItem(value);
-			if (item == null)
-				return FormValidation.error("No such project '" + value
-						+ "'. Did you mean '"
-						+ AbstractProject.findNearest(value).getName() + "' ?");
+			Item item = Hudson.getActiveInstance().getItem(value, subject.getParent());
+			if (item == null) {
+				AbstractProject nearest = AbstractProject.findNearest(value);
+				String message = "No such project '" + value + "'.";
+				if (nearest != null) {
+					message += " Did you mean '" + nearest.getName() + "' ?";
+				}
+				return FormValidation.error(message);
+			}
 			if (item instanceof Job
 					&& (((AbstractProject) item).getScm() instanceof SubversionSCM)) {
 				return FormValidation.ok();
@@ -164,7 +173,7 @@ public class TrackingSVNProperty extends JobProperty<AbstractProject<?, ?>> {
 	}
 
 	public Run getTrackedBuild() throws TrackingSVNException {
-		Job<?, ?> job = (Job<?, ?>) Hudson.getInstance().getItem(sourceProject);
+		Job<?, ?> job = getTrackedProject();
 		if (job == null)
 			throw new TrackingSVNException(
 					"Unknown source project for tracking-svn : "
@@ -176,7 +185,11 @@ public class TrackingSVNProperty extends JobProperty<AbstractProject<?, ?>> {
 		
 		return run;
 	}
-	
+
+	public Job<?, ?> getTrackedProject() {
+		return (Job<?, ?>) Hudson.getActiveInstance().getItem(sourceProject, owner.getParent());
+	}
+
 	@Override
 	public Collection<Action> getJobActions(AbstractProject<?, ?> job) {
 		return Collections.<Action>singleton(new TrackingSVNJobAction());
